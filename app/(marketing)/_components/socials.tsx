@@ -7,7 +7,7 @@ interface SocialsProps {
 
 export function Socials({ classname }: SocialsProps) {
    return (
-      <div className="flex px-2 text-foreground/80 ">
+      <div className="px-2 text-foreground/80">
          <Button variant={"ghost"} size={"icon"}>
             <Facebook className={classname} />
          </Button>
