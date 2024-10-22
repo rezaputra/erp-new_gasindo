@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useSession } from 'next-auth/react';
 import { ModeToggle } from "@/components/mode-toggle"
+import MobileSidebar from "./mobile-sidebar"
 
 
 export function Navbar() {
@@ -35,13 +36,13 @@ export function Navbar() {
       <header className={cn("sticky top-0 left-0 right-0 z-100 w-full h-1/6 bg-background",
          { " dark:border-b shadow-sm backdrop-blur-sm": isScroll }
       )}>
-         <div className="flex px-8 py-2  justify-between">
+         <div className="flex px-8 py-2 justify-between">
             <div className="flex gap-x-2 items-center text-foreground/80">
                <Logo url="/" height={32} width={32} short={true} />
                <NavbarItem />
             </div>
 
-            <div className="flex">
+            <div className="hidden md:flex">
                {session ?
                   <div className="flex items-center space-x-2  py-1 px-2 overflow-y-hidden text-foreground/75">
                      <UserAvatar />
@@ -52,9 +53,15 @@ export function Navbar() {
                         <Button variant={"link"} className="text-foreground/80" >Sign In</Button>
                      </Link>
                      <Socials classname={"size-5"} />
+                     <ModeToggle />
                   </div>
                }
-               <ModeToggle />
+            </div>
+            <div className="flex items-center md:hidden space-x-2">
+               <Link href={"/login"}>
+                  <Button variant={"link"} className="text-foreground/80" >Sign In</Button>
+               </Link>
+               <MobileSidebar />
             </div>
          </div>
       </header>

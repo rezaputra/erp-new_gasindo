@@ -20,7 +20,7 @@ export function Logo({ short = false, height, width, url, title_classname, sub_t
    } else {
       return (
          <Link href={url} className="flex items-center gap-x-4">
-            <Image src={"/logo.png"} alt="Logo full" height={height} width={width} />
+            <Image src={"/logo.png"} alt="Logo full" height={height} width={width} className="mt-0.5" />
             <div>
                <p style={{ fontFamily: "Times New Roman, Times, serif" }} className={title_classname}>
                   PT. GARUDA SAKTI

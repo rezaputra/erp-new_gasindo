@@ -79,7 +79,7 @@ const blogs: ListItem[] = [
 
 export function NavbarItem() {
    return (
-      <NavigationMenu>
+      <NavigationMenu className="hidden md:flex">
          <NavigationMenuList>
             {/* <NavigationMenuItem>
                <Link href="/" legacyBehavior passHref>

@@ -53,6 +53,18 @@ export default function OverViewPage() {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Sales</CardTitle>
+                  <CreditCard className='size-4 text-muted-foreground' />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">2,234 Kg</div>
+                  <p className="text-xs text-muted-foreground">
+                    -19% from last month
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Purchase
                   </CardTitle>
@@ -62,18 +74,6 @@ export default function OverViewPage() {
                   <div className="text-2xl font-bold">4,050 Kg</div>
                   <p className="text-xs text-muted-foreground">
                     +15.2% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Sales</CardTitle>
-                  <CreditCard className='size-4 text-muted-foreground' />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">2,234 Kg</div>
-                  <p className="text-xs text-muted-foreground">
-                    -19% from last month
                   </p>
                 </CardContent>
               </Card>

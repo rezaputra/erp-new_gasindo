@@ -10,9 +10,9 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import EmployeeTable from './employee-tables';
 
-type TEmployeeListingPage = {};
+// type TEmployeeListingPage = {};
 
-export default async function EmployeeListingPage({ }: TEmployeeListingPage) {
+export default async function EmployeeListingPage() {
   // Showcasing the use of search params cache in nested RSCs
   const page = searchParamsCache.get('page');
   const search = searchParamsCache.get('q');
@@ -37,7 +37,7 @@ export default async function EmployeeListingPage({ }: TEmployeeListingPage) {
         <div className="flex items-start justify-between">
           <Heading
             title={`Employee (${totalUsers})`}
-            description="Manage employees (Server side table functionalities.)"
+            description="Manage employees"
           />
 
           <Link
