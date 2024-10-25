@@ -8,17 +8,32 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import { addDays, format } from 'date-fns';
+import { addDays, format, isAfter } from 'date-fns';
 import * as React from 'react';
 import { DateRange } from 'react-day-picker';
 
+type CalendarDateRangePickerProps = {
+  className?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+};
+
 export function CalendarDateRangePicker({
-  className
-}: React.HTMLAttributes<HTMLDivElement>) {
+  className,
+  startDate,
+  endDate
+}: CalendarDateRangePickerProps) {
+  // Set default to last two days if startDate and endDate are not provided
+  const defaultStartDate = addDays(new Date(), -2);
+  const defaultEndDate = new Date(); // Today
+
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2023, 0, 20),
-    to: addDays(new Date(2023, 0, 20), 20)
+    from: startDate || defaultStartDate,
+    to: endDate || defaultEndDate,
   });
+
+  // Disable dates after today
+  const disableAfterToday = (date: Date) => isAfter(date, new Date());
 
   return (
     <div className={cn('grid gap-2', className)}>
@@ -55,6 +70,7 @@ export function CalendarDateRangePicker({
             selected={date}
             onSelect={setDate}
             numberOfMonths={2}
+            disabled={disableAfterToday}
           />
         </PopoverContent>
       </Popover>

@@ -14,8 +14,12 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CreditCard, DollarSign, ShoppingBag } from 'lucide-react';
+import { addDays } from 'date-fns';
 
 export default function OverViewPage() {
+  const today = new Date();
+  const last30DaysStartDate = addDays(today, -30);
+  const last30DaysEndDate = today;
   return (
     <PageContainer scrollable>
       <div className="space-y-2">
@@ -24,7 +28,10 @@ export default function OverViewPage() {
             Hi, Welcome back 👋
           </h2>
           <div className="hidden items-center space-x-2 md:flex">
-            <CalendarDateRangePicker />
+            <CalendarDateRangePicker
+              startDate={last30DaysStartDate}
+              endDate={last30DaysEndDate}
+            />
             <Button>Download</Button>
           </div>
         </div>
@@ -45,7 +52,7 @@ export default function OverViewPage() {
                   <DollarSign className='size-4 text-muted-foreground' />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$45,231.89</div>
+                  <div className="text-2xl font-bold">Rp 450,231.189,00</div>
                   <p className="text-xs text-muted-foreground">
                     +20.1% from last month
                   </p>

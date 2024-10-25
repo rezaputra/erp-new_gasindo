@@ -1,6 +1,6 @@
 "use server"
 
-import { loginSchema } from "@/lib/auth-schema"
+import { loginSchema } from "@/lib/schema-auth"
 import { getUserByEmail } from "@/data/user"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 

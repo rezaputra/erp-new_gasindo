@@ -7,11 +7,23 @@ generator client {
    provider = "prisma-client-js"
 }
 
+enum OfficeTypeEnum {
+   OFFICE
+   MILL
+}
+
+enum PurchaseTypeEnum {
+   PALM_FRUIT
+   DIESEL_FUEL
+   CALCIUM
+}
+
 model User {
-   id            String          @id @default(cuid())
+   id            String             @id @default(cuid())
+   officeId      String?
    name          String?
-   username      String?         @unique
-   email         String?         @unique
+   username      String?            @unique
+   email         String?            @unique
    emailVerified DateTime?
    image         String?
    password      String?
@@ -19,9 +31,13 @@ model User {
    sessions      Session[]
    // Optional for WebAuthn support
    Authenticator Authenticator[]
+   PurchaseScale PurchasingScales[]
+   user          Office?            @relation(fields: [officeId], references: [id])
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
+
+   @@index([officeId])
 }
 
 model Account {
@@ -82,4 +98,49 @@ model Authenticator {
    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
    @@id([userId, credentialID])
+}
+
+model Office {
+   id      String         @id @default(cuid())
+   name    String         @unique
+   type    OfficeTypeEnum
+   address String
+   users   User[]
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model Supplier {
+   id            String             @id @default(cuid())
+   name          String             @unique
+   address       String
+   phone         String
+   PurchaseScale PurchasingScales[]
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model PurchasingScales {
+   id             String            @id @default(cuid())
+   operatorId     String?
+   supplierId     String?
+   purchaseType   PurchaseTypeEnum?
+   driver         String?
+   drivingLicense String?
+   licensePlate   String?
+   origin         String?
+   entryTime      DateTime?
+   exitTime       DateTime?
+   bruto          Int?
+   tara           Int?
+   netto          Int?
+   sorting        Float?
+   total          Float?
+   operator       User?             @relation(fields: [operatorId], references: [id])
+   supplier       Supplier?         @relation(fields: [supplierId], references: [id])
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
 }

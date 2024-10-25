@@ -33,6 +33,9 @@ import {
    SidebarRail,
    SidebarTrigger
 } from '@/components/ui/sidebar';
+import { Logo } from '@/components/logo';
+import { Breadcrumbs } from '@/components/breadcrumbs';
+
 import { navItems } from '@/data/constants';
 import {
    BadgeCheck,
@@ -52,8 +55,6 @@ import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
-import { Logo } from '../logo';
 
 export const company = {
    name: 'PT. Garuda Sakti',
@@ -248,7 +249,7 @@ export default function AppSidebar({
                <div className="flex items-center gap-2 px-4">
                   <SidebarTrigger className="-ml-1" />
                   <Separator orientation="vertical" className="mr-2 h-4" />
-                  <Breadcrumb />
+                  <Breadcrumbs />
                </div>
                <div className=" hidden w-1/3 items-center gap-2 px-4 md:flex ">
                   <SearchInput />

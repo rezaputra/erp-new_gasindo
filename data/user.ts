@@ -1,4 +1,6 @@
 import { db } from "@/lib/db"
+import { auth } from "@/auth"
+
 
 export async function getUserByEmail(email: string) {
    try {
@@ -17,3 +19,10 @@ export async function getUserById(id: string) {
       return null
    }
 }
+
+export async function currentUser() {
+   const session = await auth()
+
+   return session?.user
+}
+

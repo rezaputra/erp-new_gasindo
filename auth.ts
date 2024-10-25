@@ -5,7 +5,7 @@ import type { NextAuthConfig } from "next-auth"
 import credentials from "next-auth/providers/credentials"
 
 import { db } from "@/lib/db"
-import { loginSchema } from "@/lib/auth-schema"
+import { loginSchema } from "@/lib/schema-auth"
 import { getAccountByUserId } from "@/data/account"
 import { getUserByEmail, getUserById } from "@/data/user"
 import { DEFAULT_LOGIN_REDIRECT, apiAuthPrefix, authRoutes, publicRoutes } from "@/routes"
