@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { AuthWrapper } from './auth-wrapper';
 import { FormError } from './form-error';
 
-import { RegisterSchema } from '@/lib/auth-schema';
+import { RegisterSchema } from '@/lib/schema-auth';
 import { register } from '@/actions/auth/register';
 
 import { zodResolver } from '@hookform/resolvers/zod';

@@ -10,7 +10,7 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { loginSchema } from '@/lib/auth-schema';
+import { loginSchema } from '@/lib/schema-auth';
 import { login } from '@/actions/auth/login';
 import { AuthWrapper } from './auth-wrapper';
 

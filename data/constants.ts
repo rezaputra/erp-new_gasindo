@@ -158,13 +158,13 @@ export const navItems: NavItem[] = [
 
     items: [
       {
-        title: 'Purchase',
-        url: '/dashboard/scale/purchase',
+        title: 'Purchasing',
+        url: '/dashboard/purchasing-scales',
         icon: 'userPen'
       },
       {
         title: 'Sales',
-        url: '/dashboard/scale/sales',
+        url: '/dashboard/sales-scales',
         icon: 'login'
       }
     ]

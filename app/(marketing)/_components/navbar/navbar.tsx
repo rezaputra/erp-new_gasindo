@@ -46,6 +46,7 @@ export function Navbar() {
                {session ?
                   <div className="flex items-center space-x-2  py-1 px-2 overflow-y-hidden text-foreground/75">
                      <UserAvatar />
+                     <ModeToggle />
                   </div>
                   :
                   <div className="flex space-x-2">

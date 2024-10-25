@@ -2,7 +2,7 @@
 
 import { getUserByEmail } from "@/data/user"
 import { db } from "@/lib/db"
-import { RegisterSchema } from "@/lib/auth-schema"
+import { RegisterSchema } from "@/lib/schema-auth"
 
 import bcrypt from "bcryptjs"
 import { z } from "zod"
