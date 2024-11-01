@@ -159,7 +159,7 @@ export const navItems: NavItem[] = [
     items: [
       {
         title: 'Purchasing',
-        url: '/dashboard/purchasing-scales',
+        url: '/dashboard/purchasing-scale',
         icon: 'userPen'
       },
       {

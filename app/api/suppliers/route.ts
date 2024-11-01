@@ -1,16 +1,27 @@
-// app/api/suppliers/route.ts
-
 import { NextResponse } from 'next/server';
 import { db } from "@/lib/db";
-import { Supplier } from '@prisma/client';
-
 
 export async function GET() {
    try {
-      const suppliers: Supplier[] = await db.supplier.findMany();
-      return NextResponse.json(suppliers); // Send the data as JSON response
+      const suppliers = await db.supplier.findMany({
+         include: {
+            supplierProducts: {
+               include: {
+                  product: true,
+               },
+               where: {
+                  product: {
+                     isScalable: true,
+                     isSellable: false,
+                  }
+               }
+            }
+         }
+      });
+      return NextResponse.json(suppliers);
+
    } catch (error) {
       console.error('Error fetching suppliers:', error);
-      return NextResponse.json({ message: 'Failed to fetch suppliers' }, { status: 500 }); // Return JSON response with error message and status code
+      return NextResponse.json({ message: 'Failed to fetch suppliers' }, { status: 500 });
    }
 }

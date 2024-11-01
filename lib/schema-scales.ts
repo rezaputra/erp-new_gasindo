@@ -1,27 +1,44 @@
-import { PurchaseTypeEnum } from "@prisma/client";
 import { z } from "zod";
 
-export const purchaseInSchema = z.object({
-   id: z.string().optional(),  // Optional field for identifying an existing purchase record
-   weight: z.string().min(1, {
+export const purchasingInSchema = z.object({
+   // quarterId: z.string().min(1, {
+   //    message: 'Mill origin is required.'
+   // }),
+   supplierId: z.string().min(1, {
       message: 'Supplier is required.'
    }),
-   supplier: z.string().min(1, {
-      message: 'Supplier is required.'
-   }),
-   product: z.string().min(1, {
+   productId: z.string().min(1, {
       message: 'Product is required.'
    }),
    driver: z.string().min(1, {
       message: 'Driver name is required.'
    }),
-   licence_plate: z.string().min(1, {
+   licensePlate: z.string().min(1, {
       message: 'Licence plate is required.'
    }),
-   driving_licence: z.string().min(1, {
+   drivingLicense: z.string().min(1, {
       message: 'Driving licence is required.'
    }),
    origin: z.string().min(1, {
       message: 'Origin is required.'
    }),
+   grossWeight: z.string().min(1, {
+      message: 'Gross weight is required.'
+   }),
+});
+
+export const purchasingOutSchema = z.object({
+   id: z.string().min(1, { message: 'Mill origin is required.' }),
+   qualityFactor: z.string()
+      .optional()
+      .refine(value => {
+         if (!value) return true;
+         const floatValue = parseFloat(value);
+         const isValidFloat = !isNaN(floatValue) && floatValue >= 1 && floatValue <= 100;
+
+         return isValidFloat;
+      }, {
+         message: "Quality factor must between 1 and 100.",
+      }),
+   tareWeight: z.string().min(1, { message: 'Tare weight is required.' })
 });

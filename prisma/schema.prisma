@@ -1,5 +1,6 @@
+// DATA SOURCE AND GENERATOR
 datasource db {
-   provider = "mysql"
+   provider = "postgresql"
    url      = env("DATABASE_URL")
 }
 
@@ -7,37 +8,243 @@ generator client {
    provider = "prisma-client-js"
 }
 
-enum OfficeTypeEnum {
+// ENUMS
+enum QuarterTypeEnum {
    OFFICE
    MILL
+   WAREHOUSE
+   SCALES
 }
 
-enum PurchaseTypeEnum {
-   PALM_FRUIT
-   DIESEL_FUEL
-   CALCIUM
+enum ProductUnitEnum {
+   KG
+   TON
+   LTR
+   ITEM
 }
 
-model User {
-   id            String             @id @default(cuid())
-   officeId      String?
-   name          String?
-   username      String?            @unique
-   email         String?            @unique
-   emailVerified DateTime?
-   image         String?
-   password      String?
-   accounts      Account[]
-   sessions      Session[]
-   // Optional for WebAuthn support
-   Authenticator Authenticator[]
-   PurchaseScale PurchasingScales[]
-   user          Office?            @relation(fields: [officeId], references: [id])
+enum DeliveryOrderStatus {
+   PENDING
+   LOADING
+   COMPLETED
+}
+
+// MAIN TABLES
+model Quarter {
+   id               String            @id @default(cuid())
+   name             String            @unique
+   shortName        String            @unique
+   description      String?
+   type             QuarterTypeEnum
+   address          String
+   users            User[]
+   purchasingScales PurchasingScale[]
+   salesScales      SalesScale[]
+   DeliveryOrders   DeliveryOrder[]
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model Product {
+   id         String          @id @default(cuid())
+   name       String          @unique
+   shortName  String          @unique
+   unit       ProductUnitEnum
+   isScalable Boolean         @default(false) // Indicates if product can be weighed
+   isSellable Boolean         @default(false) // Indicates if product can be sold
+
+   supplierProducts SupplierProduct[]
+   contracts        Contract[]
+   deliveryOrders   DeliveryOrder[]
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 
-   @@index([officeId])
+   @@index([isScalable, isSellable])
+}
+
+// SUPPLIER
+model Supplier {
+   id               String            @id @default(cuid())
+   name             String            @unique
+   address          String
+   phone            String
+   supplierProducts SupplierProduct[]
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model SupplierProduct {
+   id                    String                @id @default(cuid())
+   supplierId            String
+   productId             String
+   productPriceHistories ProductPriceHistory[]
+
+   supplier Supplier @relation(fields: [supplierId], references: [id])
+   product  Product  @relation(fields: [productId], references: [id])
+
+   createdAt       DateTime          @default(now())
+   updatedAt       DateTime          @updatedAt
+   PurchasingScale PurchasingScale[]
+
+   @@unique([supplierId, productId])
+}
+
+model ProductPriceHistory {
+   id                String            @id @default(cuid())
+   supplierProductId String
+   price             Int
+   validFrom         DateTime          @default(now())
+   validTo           DateTime?
+   PurchasingScales  PurchasingScale[]
+
+   supplierProduct SupplierProduct @relation(fields: [supplierProductId], references: [id])
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+// BUYER
+model Buyer {
+   id        String     @id @default(cuid())
+   name      String     @unique
+   shortName String     @unique
+   address   String
+   phone     String
+   contracts Contract[]
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model Contract {
+   id                String          @id @default(cuid())
+   buyerId           String
+   productId         String
+   contractNumber    String
+   pricePerUnit      Float
+   totalQuantity     Int
+   remainingQuantity Int
+   tolerance         Float
+   terms             String?
+   startDate         DateTime
+   endDate           DateTime?
+   deliveryOrders    DeliveryOrder[]
+
+   buyer   Buyer   @relation(fields: [buyerId], references: [id])
+   product Product @relation(fields: [productId], references: [id])
+
+   createdAt  DateTime     @default(now())
+   updatedAt  DateTime     @updatedAt
+   SalesScale SalesScale[]
+
+   @@unique([buyerId, contractNumber])
+   @@index([buyerId, productId])
+}
+
+// SCALE TABLES
+model PurchasingScale {
+   id                    String    @id @default(cuid())
+   quarterId             String?
+   operatorId            String?
+   supplierProductId     String?
+   productPriceHistoryId String?
+   ticketNumber          Int?      @default(autoincrement())
+   driver                String
+   licensePlate          String
+   drivingLicense        String
+   origin                String
+   entryTimestamp        DateTime
+   exitTimestamp         DateTime?
+   grossWeight           Int
+   tareWeight            Int?
+   initialNetWeight      Int?
+   qualityFactor         Float?
+   finalNetWeight        Float?
+
+   supplierProduct     SupplierProduct?     @relation(fields: [supplierProductId], references: [id])
+   operator            User?                @relation(fields: [operatorId], references: [id])
+   quarter             Quarter?             @relation(fields: [quarterId], references: [id])
+   productPriceHistory ProductPriceHistory? @relation(fields: [productPriceHistoryId], references: [id])
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+
+   @@index([quarterId, operatorId, ticketNumber, licensePlate, exitTimestamp])
+}
+
+model SalesScale {
+   id                   String    @id @default(cuid())
+   operatorId           String?
+   quarterId            String?
+   deliveryOrderId      String    @unique
+   splitDeleveryOrderId String?
+   driver               String
+   licensePlate         String
+   drivingLicense       String
+   sealStartNumber      Int?
+   sealEndNumber        Int?
+   entryTimestamp       DateTime  @default(now())
+   exitTimestamp        DateTime?
+   grossWeight          Int?
+   tareWeight           Int?
+   finalNetWeight       Float?
+
+   operator User?    @relation(fields: [operatorId], references: [id])
+   quarter  Quarter? @relation(fields: [quarterId], references: [id])
+
+   // Specify the relation in this model with fields and references
+   deliveryOrder DeliveryOrder? @relation("DeliveryOrderToSalesScale", fields: [deliveryOrderId], references: [id])
+   Contract      Contract?      @relation(fields: [contractId], references: [id])
+
+   createdAt  DateTime @default(now())
+   updatedAt  DateTime @updatedAt
+   contractId String?
+
+   @@index([operatorId, quarterId, licensePlate])
+}
+
+model DeliveryOrder {
+   id                  String              @id @default(cuid())
+   deliveryOrderNumber String              @unique
+   contractId          String
+   quarterId           String
+   productId           String
+   status              DeliveryOrderStatus @default(PENDING)
+
+   contract   Contract    @relation(fields: [contractId], references: [id])
+   quarter    Quarter     @relation(fields: [quarterId], references: [id])
+   product    Product     @relation(fields: [productId], references: [id])
+   salesScale SalesScale? @relation("DeliveryOrderToSalesScale")
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+// USER TABLE
+model User {
+   id               String            @id @default(cuid())
+   quarterId        String?
+   name             String?
+   username         String?           @unique
+   email            String?           @unique
+   emailVerified    DateTime?
+   image            String?
+   password         String?
+   accounts         Account[]
+   sessions         Session[]
+   Authenticator    Authenticator[]
+   purchasingScales PurchasingScale[]
+   salesScales      SalesScale[]
+
+   quarter Quarter? @relation(fields: [quarterId], references: [id])
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+
+   @@index([quarterId])
 }
 
 model Account {
@@ -46,15 +253,15 @@ model Account {
    type                     String
    provider                 String
    providerAccountId        String
-   refresh_token            String? @db.Text
-   access_token             String? @db.Text
+   refresh_token            String?
+   access_token             String?
    expires_at               Int?
    token_type               String?
    scope                    String?
-   id_token                 String? @db.Text
+   id_token                 String?
    session_state            String?
    refresh_token_expires_in Int?
-   user                     User?   @relation(fields: [userId], references: [id])
+   user                     User    @relation(fields: [userId], references: [id])
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
@@ -84,7 +291,6 @@ model VerificationToken {
    @@unique([identifier, token])
 }
 
-// Optional for WebAuthn support
 model Authenticator {
    credentialID         String  @unique
    userId               String
@@ -95,52 +301,7 @@ model Authenticator {
    credentialBackedUp   Boolean
    transports           String?
 
-   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+   user User @relation(fields: [userId], references: [id])
 
    @@id([userId, credentialID])
-}
-
-model Office {
-   id      String         @id @default(cuid())
-   name    String         @unique
-   type    OfficeTypeEnum
-   address String
-   users   User[]
-
-   createdAt DateTime @default(now())
-   updatedAt DateTime @updatedAt
-}
-
-model Supplier {
-   id            String             @id @default(cuid())
-   name          String             @unique
-   address       String
-   phone         String
-   PurchaseScale PurchasingScales[]
-
-   createdAt DateTime @default(now())
-   updatedAt DateTime @updatedAt
-}
-
-model PurchasingScales {
-   id             String            @id @default(cuid())
-   operatorId     String?
-   supplierId     String?
-   purchaseType   PurchaseTypeEnum?
-   driver         String?
-   drivingLicense String?
-   licensePlate   String?
-   origin         String?
-   entryTime      DateTime?
-   exitTime       DateTime?
-   bruto          Int?
-   tara           Int?
-   netto          Int?
-   sorting        Float?
-   total          Float?
-   operator       User?             @relation(fields: [operatorId], references: [id])
-   supplier       Supplier?         @relation(fields: [supplierId], references: [id])
-
-   createdAt DateTime @default(now())
-   updatedAt DateTime @updatedAt
 }
