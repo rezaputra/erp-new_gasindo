@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { AuthWrapper } from './auth-wrapper';
-import { FormError } from './form-error';
+import { FormError } from '../../../components/form-error';
 
 import { RegisterSchema } from '@/lib/schema-auth';
 import { register } from '@/actions/auth/register';

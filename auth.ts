@@ -54,16 +54,13 @@ const config = {
 
          return true
       },
-      async session({ session, token }: any) {
+      async session({ session, token }) {
          if (token.sub && session.user) {
             session.user.id = token.sub
          }
-         if (token.role && session.user) {
-            session.user.name = token.name
-            session.user.email = token.email
-            session.user.isOAuth = token.isOAuth
+         if (token.quarterId && session.user) {
+            session.user.quarterId = token.quarterId
          }
-
          return session
       },
       async jwt({ token }) {
@@ -76,6 +73,7 @@ const config = {
          token.isOAuth = !!existingAccount
          token.name = existingUser.name
          token.email = existingUser.email
+         token.quarterId = existingUser.quarterId
 
          return token
       },

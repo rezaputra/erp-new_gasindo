@@ -21,7 +21,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import Link from 'next/link';
-import { FormError } from './form-error';
+import { FormError } from '../../../components/form-error';
 
 
 export function LoginForm() {
