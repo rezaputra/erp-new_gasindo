@@ -10,7 +10,6 @@ import { getAccountByUserId } from "@/data/account"
 import { getUserByEmail, getUserById } from "@/data/user"
 import { DEFAULT_LOGIN_REDIRECT, apiAuthPrefix, authRoutes, publicRoutes } from "@/routes"
 
-
 const credentialsConfig = credentials({
    async authorize(credentials) {
       const validateFields = loginSchema.safeParse(credentials)
@@ -56,27 +55,27 @@ const config = {
       },
       async session({ session, token }) {
          if (token.sub && session.user) {
-            session.user.id = token.sub
+            session.user.id = token.sub;
          }
          if (token.locationId && session.user) {
-            session.user.locationId = token.locationId
+            session.user.locationId = token.locationId; // Ensure this assignment matches your User type definition
          }
-         return session
+         return session;
       },
       async jwt({ token }) {
-         if (!token.sub) return token
+         if (!token.sub) return token;
 
-         const existingUser = await getUserById(token.sub)
-         if (!existingUser) return token
+         const existingUser = await getUserById(token.sub);
+         if (!existingUser) return token;
 
-         const existingAccount = await getAccountByUserId(existingUser.id)
-         token.isOAuth = !!existingAccount
-         token.name = existingUser.name
-         token.email = existingUser.email
-         token.locationId = existingUser.locationId
+         const existingAccount = await getAccountByUserId(existingUser.id);
+         token.isOAuth = !!existingAccount;
+         token.name = existingUser.name;
+         token.email = existingUser.email;
+         token.locationId = existingUser.locationId; // Ensure this property is coming from the database
 
-         return token
-      },
+         return token;
+      }
    },
    events: {
       async linkAccount(data) {
