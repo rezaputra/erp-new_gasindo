@@ -57,7 +57,7 @@ export function FormExit({ id, onClose, className }: FormExitProps) {
                   toast.error(res.error)
                }
                if (res?.success) {
-                  onClose
+                  onClose()
                   toast.success(res.success)
                }
             })

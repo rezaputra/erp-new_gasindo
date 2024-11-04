@@ -1,19 +1,20 @@
 import PageContainer from '@/components/layout/page-container';
-import { Button, buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import EmployeeTable from './purchasing-tables';
 import { productSearchParamsCache } from '@/lib/productSearchParams';
 import { Prisma, WeighingType } from '@prisma/client';
 import { db } from '@/lib/db';
 import { currentUser } from '@/data/user';
 import { EntryView } from './entry-view';
+import { redirect } from 'next/navigation';
 
 export default async function PurchasingListingPage() {
   const user = await currentUser();
+
+  if (!user) {
+    return redirect('/login')
+  }
 
   const page = productSearchParamsCache.get('page');
   const search = productSearchParamsCache.get('q') || '';
@@ -40,7 +41,7 @@ export default async function PurchasingListingPage() {
         ? { item: { itemId: { in: productsArray } } }
         : {}),
       createdAt: { gte: sevenDaysAgo },
-      locationId: user?.locationId!,
+      locationId: user.locationId!,
       type: WeighingType.INCOMING
     },
     orderBy: [

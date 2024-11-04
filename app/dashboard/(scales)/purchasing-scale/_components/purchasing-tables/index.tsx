@@ -6,12 +6,12 @@ import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-fil
 import { DataTableSearch } from '@/components/ui/table/data-table-search';
 import { columns } from './columns';
 import { usePruchasingScaleTableFilters } from './use-employee-table-filters';
-import { Product, PurchasingScale } from '@prisma/client';
+import { Item, WeighingLog } from '@prisma/client';
 
 export default function PurchasingScalesTable({ data, totalData, products }: {
-  data: PurchasingScale[];
+  data: WeighingLog[];
   totalData: number;
-  products: Product[];
+  products: Item[];
 }) {
   const {
     productFilter,
