@@ -58,8 +58,8 @@ const config = {
          if (token.sub && session.user) {
             session.user.id = token.sub
          }
-         if (token.quarterId && session.user) {
-            session.user.quarterId = token.quarterId
+         if (token.locationId && session.user) {
+            session.user.locationId = token.locationId
          }
          return session
       },
@@ -73,7 +73,7 @@ const config = {
          token.isOAuth = !!existingAccount
          token.name = existingUser.name
          token.email = existingUser.email
-         token.quarterId = existingUser.quarterId
+         token.locationId = existingUser.locationId
 
          return token
       },

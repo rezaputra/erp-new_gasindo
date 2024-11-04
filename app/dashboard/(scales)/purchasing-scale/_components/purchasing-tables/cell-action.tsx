@@ -9,14 +9,14 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 
-import { PurchasingScale } from '@prisma/client';
 import { Edit, FileText, MoreHorizontal, Printer, SquareArrowOutUpRight, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ExitView } from '../exit-view';
+import { WeighingLog } from '@prisma/client';
 
 interface CellActionProps {
-  data: PurchasingScale;
+  data: WeighingLog;
 }
 
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
@@ -40,14 +40,12 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem
-            onClick={() => router.push(`/dashboard/user/${data.id}`)}
-          >
+          <DropdownMenuItem>
             <FileText className="mr-2 h-4 w-4" /> View
           </DropdownMenuItem>
           {
-            data.exitTimestamp ? (
-              <DropdownMenuItem onClick={() => setOpen(true)}>
+            data.exitTime ? (
+              <DropdownMenuItem>
                 <Printer className="mr-2 h-4 w-4" /> Print
               </DropdownMenuItem>
 
@@ -59,7 +57,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
             )
           }
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu >
     </>
   );
 };

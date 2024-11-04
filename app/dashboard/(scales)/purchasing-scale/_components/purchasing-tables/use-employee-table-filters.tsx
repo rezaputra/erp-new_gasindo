@@ -1,7 +1,6 @@
 'use client';
 
 import { productSearchParams } from '@/lib/productSearchParams';
-import { Product } from '@prisma/client';
 import { useQueryState } from 'nuqs';
 import { useCallback, useMemo } from 'react';
 

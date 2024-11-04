@@ -3,76 +3,75 @@
 import { currentUser } from "@/data/user";
 import { db } from "@/lib/db";
 import { purchasingOutSchema } from "@/lib/schema-scales";
-import { QuarterTypeEnum } from "@prisma/client";
+import { LocationType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 export async function purchasingScaleOut(values: z.infer<typeof purchasingOutSchema>) {
-   const user = await currentUser();
-
-   // Check for authenticated user
-   if (!user) return { error: "User is not authenticated." };
-
-   // Fetch user and quarter data
-   const userDb = await db.user.findUnique({
-      where: { id: user.id },
-      include: { quarter: true }
-   });
-
-   // Ensure user is authorized
-   if (!userDb || userDb.quarter?.type !== QuarterTypeEnum.MILL) {
-      return { error: "User is not authorized." };
-   }
-
-   // Validate input data
-   const validationResult = purchasingOutSchema.safeParse(values);
-   if (!validationResult.success) {
-      return { error: "Invalid fields.", issues: validationResult.error.errors };
-   }
-
-   const { id, tareWeight, qualityFactor } = validationResult.data;
-
-   // Fetch the purchasing scale entry
-   const purchasingScaleDb = await db.purchasingScale.findFirst({
-      where: { id, exitTimestamp: null }
-   });
-
-   // Check if the purchasing scale entry exists and is valid
-   if (!purchasingScaleDb) {
-      return { error: "Data not found or driver has exited." };
-   }
-
-   // Validate tareWeight against grossWeight
-   if (purchasingScaleDb.grossWeight <= Number(tareWeight)) {
-      return { error: "Tare weight cannot be greater than gross weight." };
-   }
-
    try {
-      const intTareWeight = Number(tareWeight);
-      const floatQualityFactor = qualityFactor ? parseFloat(qualityFactor) : undefined;
+      // Authenticate user
+      const user = await currentUser();
+      if (!user) return { error: "User is not authenticated" };
 
-      // Calculate initial net weight
-      const initialNetWeight = purchasingScaleDb.grossWeight - intTareWeight;
+      // Verify user permissions
+      const userDb = await db.user.findUnique({
+         where: { id: user.id },
+         include: { location: true }
+      });
+      if (!userDb || userDb.location?.type !== LocationType.MILL) {
+         return { error: "User is not authorized" };
+      }
 
-      // Calculate final net weight with quality factor adjustment if applicable
-      const finalNetWeight = floatQualityFactor !== undefined
-         ? initialNetWeight * (1 - floatQualityFactor / 100)
-         : initialNetWeight;
+      // Validate input schema
+      const validationResult = purchasingOutSchema.safeParse(values);
+      if (!validationResult.success) return { error: "Invalid fields", issues: validationResult.error.errors };
 
-      await db.purchasingScale.update({
-         where: { id },
-         data: {
-            tareWeight: intTareWeight,
-            ...(floatQualityFactor !== undefined && { qualityFactor: floatQualityFactor }),
-            exitTimestamp: new Date(),
-            initialNetWeight,
-            finalNetWeight,
-         }
+      const { id, tareWeight, qualityFactor } = validationResult.data;
+      const intTareWeight = parseFloat(tareWeight);
+      const floatQualityFactor = qualityFactor ? parseFloat(qualityFactor) : 0;
+
+      // Fetch weighing log for validation
+      const weighingLogDb = await db.weighingLog.findFirst({ where: { id, exitTime: null }, include: { item: true } });
+      if (!weighingLogDb) return { error: "Driver not found" };
+      if (weighingLogDb.grossWeight <= intTareWeight) {
+         return { error: "Tare weight cannot be greater than gross weight" };
+      }
+
+      // Calculate weights
+      const netWeight = weighingLogDb.grossWeight - intTareWeight;
+      const finalWeight = netWeight * (1 - floatQualityFactor / 100);
+
+      // Perform database updates within a transaction for atomicity
+      await db.$transaction(async (tx) => {
+         // Update weighing log
+         await tx.weighingLog.update({
+            where: { id },
+            data: {
+               locationId: userDb.location?.id,
+               operatorId: userDb.id,
+               tareWeight: intTareWeight,
+               quality: floatQualityFactor,
+               exitTime: new Date(),
+               netWeight,
+               finalWeight,
+            }
+         });
+
+         // Update stock
+         await tx.stock.update({
+            where: { itemId_locationId: { itemId: weighingLogDb.item.itemId, locationId: userDb.locationId! } },
+            data: {
+               remaining: {
+                  increment: finalWeight // Assuming you want to add this to the existing remaining value
+               }
+            }
+         });
       });
 
+      // Revalidate the cache for updated view
       revalidatePath("/dashboard/purchasing-scale");
 
-      return { success: "Purchase update successfully" };
+      return { success: "Purchase updated successfully" };
 
    } catch (error) {
       console.error("Error updating purchasing scale:", error);
