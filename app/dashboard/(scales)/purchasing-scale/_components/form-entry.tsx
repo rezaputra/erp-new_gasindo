@@ -29,28 +29,24 @@ import { purchasingScaleIn } from '@/actions/scales/purchasing-scale-in';
 import { toast } from 'sonner';
 import { getSuppliers } from '@/data/api';
 import { useFormPurScaleEntryStore } from '@/hooks/use-form-scale';
-import { Product, Supplier, SupplierProduct } from '@prisma/client';
 import { FormError } from '@/components/form-error';
 import { cn } from '@/lib/utils';
+import { Item } from '@prisma/client';
+import { SupplierWithItems } from '@/app/api/suppliers/route';
 
-interface SupplierWithProducts extends Supplier {
-   supplierProducts: SupplierProduct & {
-      product: Product
-   }[];
-}
 
 
 export function FormEntry({ className }: { className?: string }) {
    const [isPending, setIspending] = useState(false)
    const [error, setError] = useState<string | undefined>(undefined)
-   const [products, setProducts] = useState<Product[]>([]);
+   const [products, setProducts] = useState<Item[]>([]);
    const { setOpen } = useFormPurScaleEntryStore();
 
-   const handleSetProduct = (selectedProducts: Product[]) => setProducts(selectedProducts);
+   const handleSetProduct = (selectedProducts: Item[]) => setProducts(selectedProducts);
 
-   const { data: suppliers, isLoading: is_supplier_pending, error: supplier_error } = useQuery<SupplierWithProducts[]>({
-      queryKey: ["suppliers"],
-      queryFn: getSuppliers,
+   const { data: suppliers, isLoading: is_supplier_pending, error: supplier_error } = useQuery<SupplierWithItems[]>({
+      queryKey: ["suppliers", "SP"],
+      queryFn: () => getSuppliers("SP"),
       staleTime: 60000,
    });
 
@@ -60,10 +56,10 @@ export function FormEntry({ className }: { className?: string }) {
          grossWeight: '',
          supplierId: '',
          // quarterId: 'cm2wwmm5p0000w3falr8zqfzt',
-         productId: '',
+         itemId: '',
          driver: '',
-         licensePlate: '',
-         drivingLicense: '',
+         licenseNo: '',
+         plateNo: '',
          origin: ''
       }
    });
@@ -142,7 +138,7 @@ export function FormEntry({ className }: { className?: string }) {
                               field.onChange(supplierId);
                               const selectedSupplier = suppliers?.find((supplier) => supplier.id === supplierId);
                               if (selectedSupplier) {
-                                 handleSetProduct(selectedSupplier.supplierProducts.map(sp => sp.product));
+                                 handleSetProduct(selectedSupplier.items.map(sp => sp.item));
                               }
                            }}
                            value={field.value}
@@ -161,7 +157,7 @@ export function FormEntry({ className }: { className?: string }) {
                                  suppliers.map((supplier) => (
                                     <SelectItem key={supplier.id} value={supplier.id}>
                                        <div className=' text-sm text-foreground/80'>
-                                          <p>{supplier.name}</p><p className='text-xs text-muted-foreground font-semibold'>{supplier.shortie}</p>
+                                          <p>{supplier.name}</p><p className='text-xs text-muted-foreground font-semibold'>{supplier.code}</p>
                                        </div>
                                     </SelectItem>
                                  ))
@@ -177,7 +173,7 @@ export function FormEntry({ className }: { className?: string }) {
 
                <FormField
                   control={form.control}
-                  name="productId"
+                  name="itemId"
                   render={({ field }) => (
                      <FormItem>
                         <FormLabel>Product</FormLabel>
@@ -228,7 +224,7 @@ export function FormEntry({ className }: { className?: string }) {
                />
                <FormField
                   control={form.control}
-                  name="licensePlate"
+                  name="plateNo"
                   render={({ field }) => (
                      <FormItem>
                         <FormLabel>License plate</FormLabel>
@@ -241,7 +237,7 @@ export function FormEntry({ className }: { className?: string }) {
                />
                <FormField
                   control={form.control}
-                  name="drivingLicense"
+                  name="licenseNo"
                   render={({ field }) => (
                      <FormItem>
                         <FormLabel>Driving Licence</FormLabel>

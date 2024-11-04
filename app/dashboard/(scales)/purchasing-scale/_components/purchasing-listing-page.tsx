@@ -7,7 +7,7 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import EmployeeTable from './purchasing-tables';
 import { productSearchParamsCache } from '@/lib/productSearchParams';
-import { Prisma } from '@prisma/client';
+import { Prisma, WeighingType } from '@prisma/client';
 import { db } from '@/lib/db';
 import { currentUser } from '@/data/user';
 import { EntryView } from './entry-view';
@@ -24,42 +24,43 @@ export default async function PurchasingListingPage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const filters: Prisma.PurchasingScaleFindManyArgs = {
+  const filters: Prisma.WeighingLogFindManyArgs = {
     skip: (page - 1) * pageLimit,
     take: pageLimit,
     where: {
       ...(search
         ? {
           OR: [
-            { licensePlate: { contains: search, mode: 'insensitive' } },
+            { plateNo: { contains: search, mode: 'insensitive' } },
             { driver: { contains: search, mode: 'insensitive' } },
           ],
         }
         : {}),
       ...(productsArray.length > 0
-        ? { supplierProduct: { productId: { in: productsArray } } }
+        ? { item: { itemId: { in: productsArray } } }
         : {}),
       createdAt: { gte: sevenDaysAgo },
-      quarterId: user?.quarterId,
+      locationId: user?.locationId!,
+      type: WeighingType.INCOMING
     },
     orderBy: [
-      { entryTimestamp: 'asc' },
+      { entryTime: 'desc' },
       { createdAt: 'desc' },
     ],
     include: {
-      supplierProduct: {
+      item: {
         include: {
           supplier: true,
-          product: true,
+          item: true,
         },
       },
     },
   };
 
 
-  const data = await db.purchasingScale.findMany(filters);
+  const data = await db.weighingLog.findMany(filters);
 
-  const products = await db.product.findMany({ where: { isScalable: true, isSellable: false } })
+  const products = await db.item.findMany({ where: { itemType: { code: "SP" } } })
   const totalData = data.length;
 
   return (

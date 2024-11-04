@@ -3,83 +3,85 @@
 import { currentUser } from "@/data/user";
 import { db } from "@/lib/db";
 import { purchasingInSchema } from "@/lib/schema-scales";
-import { QuarterTypeEnum } from "@prisma/client";
+import { LocationType, WeighingType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 export async function purchasingScaleIn(values: z.infer<typeof purchasingInSchema>) {
-   const user = await currentUser();
-   if (!user) {
-      return { error: "User is not authenticated." };
-   }
-
-   const userDb = await db.user.findUnique({ where: { id: user.id }, include: { quarter: true } })
-
-   if (!userDb || userDb.quarter?.type != QuarterTypeEnum.MILL) {
-      return { error: "User is not authorized." };
-   }
-
-   const validationResult = purchasingInSchema.safeParse(values);
-   if (!validationResult.success) {
-      return { error: "Invalid fields" };
-   }
-
-   const { supplierId, productId, driver, licensePlate, drivingLicense, origin, grossWeight } = validationResult.data;
-
-   const supplierProductDb = await db.supplierProduct.findFirst({
-      where: {
-         productId, supplierId, product: {
-            isScalable: true,
-            isSellable: false,
-         }
-      }
-   })
-
-   if (!supplierProductDb) {
-      return { error: "Product is not found in supplier." };
-   }
-
-   const existingDriverEntry = await db.purchasingScale.findFirst({
-      where: {
-         OR: [
-            { drivingLicense },
-            { licensePlate },
-         ],
-         exitTimestamp: null,
-      },
-   });
-
-   if (existingDriverEntry) {
-      return { error: "An active entry for this driver or license plate already exists." };;
-   }
-
-   const productPriceHistoryDb = await db.productPriceHistory.findFirst({
-      where: { supplierProductId: supplierProductDb.id },
-      orderBy: { createdAt: 'desc' },
-   });
-
-   if (!productPriceHistoryDb) {
-      return { error: "No price found for this supplier." };
-   }
-
    try {
+      // Authenticate and validate the user
+      const user = await currentUser();
+      if (!user) return { error: "User is not authenticated" };
 
-      await db.purchasingScale.create({
-         data: {
-            quarterId: userDb.quarter.id,
-            operatorId: userDb.id,
-            supplierProductId: supplierProductDb.id,
-            productPriceHistoryId: productPriceHistoryDb.id,
-            driver,
-            entryTimestamp: new Date(),
-            drivingLicense,
-            licensePlate,
-            origin,
-            grossWeight: parseInt(grossWeight),
+      const userDb = await db.user.findUnique({
+         where: { id: user.id },
+         include: { location: true }
+      });
+      if (!userDb || userDb.location?.type !== LocationType.MILL) {
+         return { error: "User is not authorized" };
+      }
+
+      // Validate the input schema
+      const { success, data: parsedValues } = purchasingInSchema.safeParse(values);
+      if (!success) return { error: "Invalid fields" };
+
+      const { supplierId, itemId, driver, licenseNo, plateNo, origin, grossWeight } = parsedValues;
+
+      // Retrieve supplier item details
+      const supplierItemDb = await db.supplierItem.findUnique({
+         where: { supplierId_itemId: { supplierId, itemId } }
+      });
+      // const supplierItemDb = await db.supplierItem.findFirst({
+      //    where: { item: { itemType: { code: "SP" } } }
+      // });
+      if (!supplierItemDb) return { error: "Item is not found in supplier." };
+
+      // Check for existing active entries
+      const existingEntry = await db.weighingLog.findFirst({
+         where: {
+            OR: [{ licenseNo }, { plateNo }],
+            type: WeighingType.INCOMING,
+            exitTime: null,
          },
       });
+      if (existingEntry) return { error: "An active entry for this driver or license plate already exists." };
 
-      revalidatePath('dashboard/purchasing-scale');
+      // Fetch latest price history
+      const productPriceHistoryDb = await db.priceHistory.findFirst({
+         where: { item: { itemId, supplierId } },
+         orderBy: { createdAt: "desc" },
+      });
+      if (!productPriceHistoryDb) return { error: "No price found for this supplier." };
+
+      // Perform operations within a transaction
+      await db.$transaction(async (tx) => {
+         // Ensure stock record exists or create if missing
+         await tx.stock.upsert({
+            where: { itemId_locationId: { itemId, locationId: userDb.locationId! } },
+            update: {},  // No updates are required if the stock entry already exists
+            create: { itemId, locationId: userDb.locationId!, remaining: 0 }
+         });
+
+         // Create weighing log entry
+         await tx.weighingLog.create({
+            data: {
+               locationId: userDb.locationId!,
+               operatorId: userDb.id,
+               itemId: supplierItemDb.id,
+               type: WeighingType.INCOMING,
+               priceId: productPriceHistoryDb.id,
+               driver,
+               licenseNo,
+               plateNo,
+               origin,
+               grossWeight: parseInt(grossWeight),
+            },
+         });
+      });
+
+
+      // Revalidate the dashboard path
+      revalidatePath("dashboard/purchasing-scale");
 
       return { success: "Purchase created successfully" };
 

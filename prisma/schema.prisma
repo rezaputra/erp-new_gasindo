@@ -1,116 +1,152 @@
-// DATA SOURCE AND GENERATOR
+// DATABASE CONNECTION
 datasource db {
    provider = "postgresql"
    url      = env("DATABASE_URL")
 }
 
+// CLIENT GENERATOR
 generator client {
    provider = "prisma-client-js"
 }
 
-// ENUMS
-enum QuarterTypeEnum {
+// Enums
+enum LocationType {
    OFFICE
    MILL
    WAREHOUSE
-   SCALES
 }
 
-enum ProductUnitEnum {
+enum UnitType {
    KG
-   TON
    LTR
-   ITEM
+   PCS
 }
 
-enum DeliveryOrderStatus {
+enum OrderStatus {
    PENDING
    LOADING
    COMPLETED
 }
 
-// MAIN TABLES
-model Quarter {
-   id               String            @id @default(cuid())
-   name             String            @unique
-   shortName        String            @unique
-   description      String?
-   type             QuarterTypeEnum
-   address          String
-   users            User[]
-   purchasingScales PurchasingScale[]
-   salesScales      SalesScale[]
-   DeliveryOrders   DeliveryOrder[]
+enum WeighingType {
+   INCOMING
+   OUTGOING
+}
+
+enum TransactionType {
+   DEBIT
+   CREDIT
+}
+
+// Core Models
+model Location {
+   id      String       @id @default(cuid())
+   name    String
+   code    String       @unique
+   type    LocationType
+   address String
+
+   users        User[]
+   weighingLogs WeighingLog[]
+   transactions Transaction[]
+   orders       Order[]
+   stocks       Stock[]
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 }
 
-model Product {
-   id         String          @id @default(cuid())
-   name       String          @unique
-   shortName  String          @unique
-   unit       ProductUnitEnum
-   isScalable Boolean         @default(false) // Indicates if product can be weighed
-   isSellable Boolean         @default(false) // Indicates if product can be sold
+model Stock {
+   id         String @id @default(cuid())
+   locationId String
+   itemId     String
+   remaining  Float
 
-   supplierProducts SupplierProduct[]
-   contracts        Contract[]
-   deliveryOrders   DeliveryOrder[]
+   location Location @relation(fields: [locationId], references: [id])
+   item     Item     @relation(fields: [itemId], references: [id])
+
+   @@unique([itemId, locationId])
+}
+
+model Item {
+   id          String   @id @default(cuid())
+   typeId      String
+   name        String
+   code        String   @unique
+   unit        UnitType
+   description String?
+
+   supplierItems SupplierItem[]
+   contracts     Contract[]
+   orders        Order[]
+   Stock         Stock[]
+
+   itemType ItemType @relation(fields: [typeId], references: [id])
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
-
-   @@index([isScalable, isSellable])
 }
 
-// SUPPLIER
+model ItemType {
+   id          String  @id @default(cuid())
+   name        String
+   code        String  @unique
+   description String?
+
+   items Item[]
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+// Supplier Models
 model Supplier {
-   id               String            @id @default(cuid())
-   name             String            @unique
-   address          String
-   phone            String
-   supplierProducts SupplierProduct[]
+   id      String         @id @default(cuid())
+   name    String
+   code    String         @unique
+   address String
+   phone   String
+   items   SupplierItem[]
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 }
 
-model SupplierProduct {
-   id                    String                @id @default(cuid())
-   supplierId            String
-   productId             String
-   productPriceHistories ProductPriceHistory[]
+model SupplierItem {
+   id           String         @id @default(cuid())
+   supplierId   String
+   itemId       String
+   priceHistory PriceHistory[]
+   weighingLogs WeighingLog[]
 
    supplier Supplier @relation(fields: [supplierId], references: [id])
-   product  Product  @relation(fields: [productId], references: [id])
+   item     Item     @relation(fields: [itemId], references: [id])
 
-   createdAt       DateTime          @default(now())
-   updatedAt       DateTime          @updatedAt
-   PurchasingScale PurchasingScale[]
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
 
-   @@unique([supplierId, productId])
+   @@unique([supplierId, itemId]) // Unique constraint on supplier-item combination
 }
 
-model ProductPriceHistory {
-   id                String            @id @default(cuid())
-   supplierProductId String
-   price             Int
-   validFrom         DateTime          @default(now())
-   validTo           DateTime?
-   PurchasingScales  PurchasingScale[]
+model PriceHistory {
+   id           String        @id @default(cuid())
+   itemId       String
+   price        Float
+   validFrom    DateTime      @default(now())
+   validTo      DateTime?
+   weighingLogs WeighingLog[]
 
-   supplierProduct SupplierProduct @relation(fields: [supplierProductId], references: [id])
+   item SupplierItem @relation(fields: [itemId], references: [id])
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 }
 
-// BUYER
+// Buyer Models
 model Buyer {
    id        String     @id @default(cuid())
-   name      String     @unique
-   shortName String     @unique
+   name      String
+   code      String     @unique
    address   String
    phone     String
    contracts Contract[]
@@ -120,167 +156,177 @@ model Buyer {
 }
 
 model Contract {
-   id                String          @id @default(cuid())
-   buyerId           String
-   productId         String
-   contractNumber    String
-   pricePerUnit      Float
-   totalQuantity     Int
-   remainingQuantity Int
-   tolerance         Float
-   terms             String?
-   startDate         DateTime
-   endDate           DateTime?
-   deliveryOrders    DeliveryOrder[]
+   id           String        @id @default(cuid())
+   buyerId      String
+   itemId       String
+   contractNo   String
+   unitPrice    Float
+   totalQty     Int
+   remainingQty Int
+   tolerance    Float
+   terms        String?
+   startDate    DateTime
+   endDate      DateTime?
+   orders       Order[]
+   weighingLogs WeighingLog[]
 
-   buyer   Buyer   @relation(fields: [buyerId], references: [id])
-   product Product @relation(fields: [productId], references: [id])
-
-   createdAt  DateTime     @default(now())
-   updatedAt  DateTime     @updatedAt
-   SalesScale SalesScale[]
-
-   @@unique([buyerId, contractNumber])
-   @@index([buyerId, productId])
-}
-
-// SCALE TABLES
-model PurchasingScale {
-   id                    String    @id @default(cuid())
-   quarterId             String?
-   operatorId            String?
-   supplierProductId     String?
-   productPriceHistoryId String?
-   ticketNumber          Int?      @default(autoincrement())
-   driver                String
-   licensePlate          String
-   drivingLicense        String
-   origin                String
-   entryTimestamp        DateTime
-   exitTimestamp         DateTime?
-   grossWeight           Int
-   tareWeight            Int?
-   initialNetWeight      Int?
-   qualityFactor         Float?
-   finalNetWeight        Float?
-
-   supplierProduct     SupplierProduct?     @relation(fields: [supplierProductId], references: [id])
-   operator            User?                @relation(fields: [operatorId], references: [id])
-   quarter             Quarter?             @relation(fields: [quarterId], references: [id])
-   productPriceHistory ProductPriceHistory? @relation(fields: [productPriceHistoryId], references: [id])
+   buyer Buyer @relation(fields: [buyerId], references: [id])
+   item  Item  @relation(fields: [itemId], references: [id])
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 
-   @@index([quarterId, operatorId, ticketNumber, licensePlate, exitTimestamp])
+   @@unique([buyerId, contractNo])
+   @@index([buyerId, itemId]) // Index on buyer-item for faster queries
 }
 
-model SalesScale {
-   id                   String    @id @default(cuid())
-   operatorId           String?
-   quarterId            String?
-   deliveryOrderId      String    @unique
-   splitDeleveryOrderId String?
-   driver               String
-   licensePlate         String
-   drivingLicense       String
-   sealStartNumber      Int?
-   sealEndNumber        Int?
-   entryTimestamp       DateTime  @default(now())
-   exitTimestamp        DateTime?
-   grossWeight          Int?
-   tareWeight           Int?
-   finalNetWeight       Float?
+// Unified Weighing Log Model
+model WeighingLog {
+   id              String       @id @default(cuid())
+   ticketNo        BigInt       @default(autoincrement())
+   type            WeighingType
+   locationId      String
+   operatorId      String
+   itemId          String
+   priceId         String?
+   orderId         String?      @unique
+   extendedOrderId String?      @unique
+   driver          String
+   plateNo         String
+   licenseNo       String
+   origin          String?
+   entryTime       DateTime     @default(now())
+   exitTime        DateTime?
+   sealStartNo     Int? // Only for outgoing products
+   sealEndNo       Int? // Only for outgoing products
+   grossWeight     Int
+   tareWeight      Int?
+   netWeight       Float?
+   quality         Float?       @default(0) // Quality grading, if applicable
+   finalWeight     Float?
 
-   operator User?    @relation(fields: [operatorId], references: [id])
-   quarter  Quarter? @relation(fields: [quarterId], references: [id])
+   // Relations
+   operator     User          @relation(fields: [operatorId], references: [id])
+   location     Location      @relation(fields: [locationId], references: [id])
+   item         SupplierItem  @relation(fields: [itemId], references: [id])
+   priceHistory PriceHistory? @relation(fields: [priceId], references: [id])
+   order        Order?        @relation("OrderToWeighingLog", fields: [orderId], references: [id])
 
-   // Specify the relation in this model with fields and references
-   deliveryOrder DeliveryOrder? @relation("DeliveryOrderToSalesScale", fields: [deliveryOrderId], references: [id])
-   Contract      Contract?      @relation(fields: [contractId], references: [id])
+   transactions Transaction[]
 
-   createdAt  DateTime @default(now())
-   updatedAt  DateTime @updatedAt
+   createdAt  DateTime  @default(now())
+   updatedAt  DateTime  @updatedAt
+   Contract   Contract? @relation(fields: [contractId], references: [id])
    contractId String?
 
-   @@index([operatorId, quarterId, licensePlate])
+   @@index([locationId, operatorId, ticketNo, plateNo, exitTime])
+   @@index([type, itemId]) // Index to quickly find logs by type and item
 }
 
-model DeliveryOrder {
-   id                  String              @id @default(cuid())
-   deliveryOrderNumber String              @unique
-   contractId          String
-   quarterId           String
-   productId           String
-   status              DeliveryOrderStatus @default(PENDING)
+// Order Model
+model Order {
+   id         String      @id @default(cuid())
+   orderNo    String      @unique
+   contractId String
+   locationId String
+   itemId     String
+   status     OrderStatus @default(PENDING)
 
-   contract   Contract    @relation(fields: [contractId], references: [id])
-   quarter    Quarter     @relation(fields: [quarterId], references: [id])
-   product    Product     @relation(fields: [productId], references: [id])
-   salesScale SalesScale? @relation("DeliveryOrderToSalesScale")
+   contract    Contract     @relation(fields: [contractId], references: [id])
+   location    Location     @relation(fields: [locationId], references: [id])
+   item        Item         @relation(fields: [itemId], references: [id])
+   weighingLog WeighingLog? @relation("OrderToWeighingLog")
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 }
 
-// USER TABLE
+// Transaction Model
+model TransactionCategory {
+   id          String  @id @default(cuid())
+   name        String  @unique
+   description String?
+
+   transactions Transaction[]
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+   id              String          @id @default(cuid())
+   transactionNo   String          @unique
+   locationId      String
+   weighingLogId   String? // Links to a specific weighing log if applicable
+   transactionType TransactionType // INCOME or EXPENSE
+   amount          Float
+   description     String?
+   transactionDate DateTime        @default(now())
+   categoryId      String // References TransactionCategory for predefined types
+
+   // Relations
+   location    Location            @relation(fields: [locationId], references: [id])
+   weighingLog WeighingLog?        @relation(fields: [weighingLogId], references: [id])
+   category    TransactionCategory @relation(fields: [categoryId], references: [id])
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+
+   @@index([transactionType, categoryId])
+}
+
+// User Model
 model User {
-   id               String            @id @default(cuid())
-   quarterId        String?
-   name             String?
-   username         String?           @unique
-   email            String?           @unique
-   emailVerified    DateTime?
-   image            String?
-   password         String?
-   accounts         Account[]
-   sessions         Session[]
-   Authenticator    Authenticator[]
-   purchasingScales PurchasingScale[]
-   salesScales      SalesScale[]
+   id             String          @id @default(cuid())
+   locationId     String?
+   name           String?
+   username       String?         @unique
+   email          String?         @unique
+   emailVerified  DateTime?
+   image          String?
+   password       String?
+   accounts       Account[]
+   sessions       Session[]
+   authenticators Authenticator[]
+   weighingLogs   WeighingLog[]
 
-   quarter Quarter? @relation(fields: [quarterId], references: [id])
+   location Location? @relation(fields: [locationId], references: [id])
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 
-   @@index([quarterId])
+   @@index([locationId])
 }
 
 model Account {
-   id                       String  @id @default(cuid())
-   userId                   String  @unique
-   type                     String
-   provider                 String
-   providerAccountId        String
-   refresh_token            String?
-   access_token             String?
-   expires_at               Int?
-   token_type               String?
-   scope                    String?
-   id_token                 String?
-   session_state            String?
-   refresh_token_expires_in Int?
-   user                     User    @relation(fields: [userId], references: [id])
+   userId            String
+   type              String
+   provider          String
+   providerAccountId String
+   refresh_token     String?
+   access_token      String?
+   expires_at        Int?
+   token_type        String?
+   scope             String?
+   id_token          String?
+   session_state     String?
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
 
-   @@unique([provider, providerAccountId])
-   @@index([userId])
+   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+   @@id([provider, providerAccountId])
 }
 
 model Session {
-   id           String   @id @default(cuid())
    sessionToken String   @unique
    userId       String
    expires      DateTime
-   user         User     @relation(fields: [userId], references: [id])
+   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
-
-   @@index([userId])
 }
 
 model VerificationToken {
@@ -288,9 +334,10 @@ model VerificationToken {
    token      String
    expires    DateTime
 
-   @@unique([identifier, token])
+   @@id([identifier, token])
 }
 
+// Optional for WebAuthn support
 model Authenticator {
    credentialID         String  @unique
    userId               String
@@ -301,7 +348,7 @@ model Authenticator {
    credentialBackedUp   Boolean
    transports           String?
 
-   user User @relation(fields: [userId], references: [id])
+   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
    @@id([userId, credentialID])
 }

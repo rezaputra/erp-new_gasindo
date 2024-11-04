@@ -5,25 +5,25 @@ export const purchasingInSchema = z.object({
    //    message: 'Mill origin is required.'
    // }),
    supplierId: z.string().min(1, {
-      message: 'Supplier is required.'
+      message: 'Supplier is required'
    }),
-   productId: z.string().min(1, {
-      message: 'Product is required.'
+   itemId: z.string().min(1, {
+      message: 'Item is required'
    }),
    driver: z.string().min(1, {
-      message: 'Driver name is required.'
+      message: 'Driver name is required'
    }),
-   licensePlate: z.string().min(1, {
-      message: 'Licence plate is required.'
+   plateNo: z.string().min(1, {
+      message: 'Licence plate is required'
    }),
-   drivingLicense: z.string().min(1, {
-      message: 'Driving licence is required.'
+   licenseNo: z.string().min(1, {
+      message: 'Driving licence is required'
    }),
    origin: z.string().min(1, {
-      message: 'Origin is required.'
+      message: 'Origin is required'
    }),
    grossWeight: z.string().min(1, {
-      message: 'Gross weight is required.'
+      message: 'Gross weight is required'
    }),
 });
 

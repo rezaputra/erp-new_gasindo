@@ -3,11 +3,11 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
-import { PurchasingScale } from '@prisma/client';
+import { WeighingLog } from '@prisma/client';
 
 
 
-export const columns: ColumnDef<PurchasingScale>[] = [
+export const columns: ColumnDef<WeighingLog>[] = [
   {
     id: 'select',
     // header: 'Exit',
@@ -20,7 +20,7 @@ export const columns: ColumnDef<PurchasingScale>[] = [
     // ),
     cell: ({ row }) => (
       <Checkbox className=' mb-2'
-        checked={!!row.original.exitTimestamp}
+        checked={!!row.original.exitTime}
         // onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
         disabled={true}
@@ -30,7 +30,7 @@ export const columns: ColumnDef<PurchasingScale>[] = [
     enableHiding: false
   },
   {
-    accessorKey: 'licensePlate',
+    accessorKey: 'plateNo',
     header: 'PLATE',
   },
   {
@@ -38,12 +38,8 @@ export const columns: ColumnDef<PurchasingScale>[] = [
     header: 'DRIVER'
   },
   {
-    accessorKey: 'supplierProduct.product.name',
+    accessorKey: 'item.item.name',
     header: 'PRODUCT'
-  },
-  {
-    accessorKey: 'origin',
-    header: 'ORIGIN'
   },
   {
     accessorKey: 'grossWeight',
@@ -53,12 +49,12 @@ export const columns: ColumnDef<PurchasingScale>[] = [
     accessorKey: 'tareWeight',
     header: 'TARE'
   },
-  // {
-  //   accessorKey: 'sorting',
-  //   header: 'SORTING'
-  // },
   {
-    accessorKey: 'finalNetWeight',
+    accessorKey: 'quality',
+    header: 'SORTING'
+  },
+  {
+    accessorKey: 'finalWeight',
     header: 'FINAL WEIGHT'
   },
   {
