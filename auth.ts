@@ -53,29 +53,33 @@ const config = {
 
          return true
       },
-      async session({ session, token }) {
+      async session({ session, token }: any) {
          if (token.sub && session.user) {
-            session.user.id = token.sub;
+            session.user.id = token.sub
          }
          if (token.locationId && session.user) {
-            session.user.locationId = token.locationId; // Ensure this assignment matches your User type definition
+            session.user.locationId = token.locationId
+            session.user.name = token.name
+            session.user.email = token.email
+            session.user.isOAuth = token.isOAuth
          }
-         return session;
+
+         return session
       },
       async jwt({ token }) {
-         if (!token.sub) return token;
+         if (!token.sub) return token
 
-         const existingUser = await getUserById(token.sub);
-         if (!existingUser) return token;
+         const existingUser = await getUserById(token.sub)
+         if (!existingUser) return token
 
-         const existingAccount = await getAccountByUserId(existingUser.id);
-         token.isOAuth = !!existingAccount;
-         token.name = existingUser.name;
-         token.email = existingUser.email;
-         token.locationId = existingUser.locationId; // Ensure this property is coming from the database
+         const existingAccount = await getAccountByUserId(existingUser.id)
+         token.isOAuth = !!existingAccount
+         token.name = existingUser.name
+         token.email = existingUser.email
+         token.locationId = existingUser.locationId
 
-         return token;
-      }
+         return token
+      },
    },
    events: {
       async linkAccount(data) {
