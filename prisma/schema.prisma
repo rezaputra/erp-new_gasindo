@@ -202,7 +202,7 @@ model WeighingLog {
    grossWeight     Int
    tareWeight      Int?
    netWeight       Float?
-   quality         Float?       @default(0) // Quality grading, if applicable
+   quality         Float?
    finalWeight     Float?
 
    // Relations

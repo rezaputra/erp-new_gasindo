@@ -11,7 +11,7 @@ CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'LOADING', 'COMPLETED');
 CREATE TYPE "WeighingType" AS ENUM ('INCOMING', 'OUTGOING');
 
 -- CreateEnum
-CREATE TYPE "TransactionType" AS ENUM ('INCOME', 'EXPENSE');
+CREATE TYPE "TransactionType" AS ENUM ('DEBIT', 'CREDIT');
 
 -- CreateTable
 CREATE TABLE "Location" (
@@ -136,7 +136,7 @@ CREATE TABLE "WeighingLog" (
     "id" TEXT NOT NULL,
     "ticketNo" BIGSERIAL NOT NULL,
     "type" "WeighingType" NOT NULL,
-    "locationId" TEXT NOT NULL,
+    "locationId" TEXT,
     "operatorId" TEXT NOT NULL,
     "itemId" TEXT NOT NULL,
     "priceId" TEXT,
@@ -153,7 +153,7 @@ CREATE TABLE "WeighingLog" (
     "grossWeight" INTEGER NOT NULL,
     "tareWeight" INTEGER,
     "netWeight" DOUBLE PRECISION,
-    "quality" DOUBLE PRECISION,
+    "quality" DOUBLE PRECISION DEFAULT 0,
     "finalWeight" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -365,7 +365,7 @@ ALTER TABLE "Contract" ADD CONSTRAINT "Contract_itemId_fkey" FOREIGN KEY ("itemI
 ALTER TABLE "WeighingLog" ADD CONSTRAINT "WeighingLog_operatorId_fkey" FOREIGN KEY ("operatorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WeighingLog" ADD CONSTRAINT "WeighingLog_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "WeighingLog" ADD CONSTRAINT "WeighingLog_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WeighingLog" ADD CONSTRAINT "WeighingLog_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "SupplierItem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -18,6 +18,7 @@ export async function purchasingScaleOut(values: z.infer<typeof purchasingOutSch
          where: { id: user.id },
          include: { location: true }
       });
+
       if (!userDb || userDb.location?.type !== LocationType.MILL) {
          return { error: "User is not authorized" };
       }
@@ -28,7 +29,7 @@ export async function purchasingScaleOut(values: z.infer<typeof purchasingOutSch
 
       const { id, tareWeight, qualityFactor } = validationResult.data;
       const intTareWeight = parseFloat(tareWeight);
-      const floatQualityFactor = qualityFactor ? parseFloat(qualityFactor) : 0;
+      const floatQualityFactor = qualityFactor != null ? parseFloat(qualityFactor) : 0;
 
       // Fetch weighing log for validation
       const weighingLogDb = await db.weighingLog.findFirst({ where: { id, exitTime: null }, include: { item: true } });
@@ -62,7 +63,7 @@ export async function purchasingScaleOut(values: z.infer<typeof purchasingOutSch
             where: { itemId_locationId: { itemId: weighingLogDb.item.itemId, locationId: userDb.locationId! } },
             data: {
                remaining: {
-                  increment: finalWeight // Assuming you want to add this to the existing remaining value
+                  increment: finalWeight
                }
             }
          });
