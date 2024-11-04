@@ -41,7 +41,7 @@ export default async function PurchasingListingPage() {
         ? { item: { itemId: { in: productsArray } } }
         : {}),
       createdAt: { gte: sevenDaysAgo },
-      locationId: user.locationId!,
+      locationId: user.locationId ?? undefined,
       type: WeighingType.INCOMING
     },
     orderBy: [
