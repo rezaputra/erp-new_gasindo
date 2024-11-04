@@ -12,8 +12,10 @@ import { redirect } from 'next/navigation';
 export default async function PurchasingListingPage() {
   const user = await currentUser();
 
-  if (!user) {
-    return redirect('/login')
+  const userDb = await db.user.findUnique({ where: { id: user?.id } })
+
+  if (!userDb) {
+    return
   }
 
   const page = productSearchParamsCache.get('page');
@@ -41,7 +43,7 @@ export default async function PurchasingListingPage() {
         ? { item: { itemId: { in: productsArray } } }
         : {}),
       createdAt: { gte: sevenDaysAgo },
-      locationId: user.locationId ?? undefined,
+      locationId: userDb.locationId!,
       type: WeighingType.INCOMING
     },
     orderBy: [

@@ -185,7 +185,7 @@ model WeighingLog {
    id              String       @id @default(cuid())
    ticketNo        BigInt       @default(autoincrement())
    type            WeighingType
-   locationId      String
+   locationId      String?
    operatorId      String
    itemId          String
    priceId         String?
@@ -207,7 +207,7 @@ model WeighingLog {
 
    // Relations
    operator     User          @relation(fields: [operatorId], references: [id])
-   location     Location      @relation(fields: [locationId], references: [id])
+   location     Location?     @relation(fields: [locationId], references: [id])
    item         SupplierItem  @relation(fields: [itemId], references: [id])
    priceHistory PriceHistory? @relation(fields: [priceId], references: [id])
    order        Order?        @relation("OrderToWeighingLog", fields: [orderId], references: [id])
