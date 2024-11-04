@@ -133,7 +133,7 @@ export function FormEntry({ className }: { className?: string }) {
                      <FormItem>
                         <FormLabel>Supplier</FormLabel>
                         <Select
-                           disabled={is_supplier_pending}
+                           disabled={is_supplier_pending || isPending}
                            onValueChange={(supplierId) => {
                               field.onChange(supplierId);
                               const selectedSupplier = suppliers?.find((supplier) => supplier.id === supplierId);
@@ -178,7 +178,7 @@ export function FormEntry({ className }: { className?: string }) {
                      <FormItem>
                         <FormLabel>Product</FormLabel>
                         <Select
-                           disabled={!products.length}
+                           disabled={!products.length || isPending}
                            onValueChange={field.onChange}
                            value={field.value}
                         >
