@@ -41,6 +41,26 @@ export function FormEntry({ className }: { className?: string }) {
    const [error, setError] = useState<string | undefined>(undefined)
    const [products, setProducts] = useState<Item[]>([]);
    const { setOpen } = useFormPurScaleEntryStore();
+   const [weight, setWeight] = useState('');
+
+   React.useEffect(() => {
+      const fetchWeight = async () => {
+         try {
+            const response = await fetch("http://localhost:5000/api/scale/scale-test");
+            const jsonData = await response.json();
+            setWeight(jsonData.data.weight);
+         } catch (error) {
+            console.error("Error fetching weight data:", error);
+         }
+      };
+
+      // Fetch data every second
+      const interval = setInterval(fetchWeight, 1000);
+
+      // Clean up the interval on component unmount
+      return () => clearInterval(interval);
+   }, []);
+
 
    const handleSetProduct = (selectedProducts: Item[]) => setProducts(selectedProducts);
 
@@ -63,6 +83,7 @@ export function FormEntry({ className }: { className?: string }) {
          origin: ''
       }
    });
+
 
 
    function onSubmit(values: z.infer<typeof purchasingInSchema>) {
@@ -102,23 +123,7 @@ export function FormEntry({ className }: { className?: string }) {
                            disabled={isPending}
                            className='text-4xl py-10 text-center'
                            placeholder='######'
-                           onChange={(e) => {
-                              const value = e.target.value;
-                              if (!value || value.length <= 7) {
-                                 field.onChange(value ? String(value) : '');
-                              }
-                           }}
-                           onKeyDown={(e) => {
-                              if (e.key.match(/[^0-9]/) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
-                                 e.preventDefault();
-                              }
-                           }}
-                           onPaste={(e) => {
-                              const paste = e.clipboardData.getData('text');
-                              if (paste.match(/[^0-9]/)) {
-                                 e.preventDefault();
-                              }
-                           }}
+                           value={weight}
                         />
                      </FormControl>
                      <FormMessage />
