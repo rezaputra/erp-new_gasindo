@@ -73,7 +73,7 @@ export function FormEntry({ className }: { className?: string }) {
    const form = useForm<z.infer<typeof purchasingInSchema>>({
       resolver: zodResolver(purchasingInSchema),
       defaultValues: {
-         grossWeight: '',
+         grossWeight: 0,
          supplierId: '',
          // quarterId: 'cm2wwmm5p0000w3falr8zqfzt',
          itemId: '',
@@ -121,8 +121,8 @@ export function FormEntry({ className }: { className?: string }) {
                            type="number"
                            {...field}
                            disabled={isPending}
+                           className="text-4xl py-10 text-center"
                            className='text-4xl py-10 text-center'
-                           placeholder='######'
                            value={weight}
                         />
                      </FormControl>
