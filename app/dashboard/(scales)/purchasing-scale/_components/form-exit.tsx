@@ -76,7 +76,7 @@ export function FormExit({ id, onClose, className }: FormExitProps) {
                      <FormLabel>Weight</FormLabel>
                      <FormControl>
                         <Input
-                           type='text'
+                           type='number'
                            {...field}
                            disabled={isPending}
                            className='text-4xl py-10 text-center'
