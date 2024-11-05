@@ -1,8 +1,9 @@
+'use client';
+
 import * as React from 'react';
-import { FormError } from '@/components/form-error';
-import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import {
    Form,
@@ -13,16 +14,6 @@ import {
    FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { purchasingInSchema } from '@/lib/schema-scales';
-import { useQuery } from '@tanstack/react-query';
-import { useState, startTransition, useEffect } from "react";
-import { purchasingScaleIn } from '@/actions/scales/purchasing-scale-in';
-import { toast } from 'sonner';
-import { getSuppliers } from '@/data/api';
-import { useFormPurScaleEntryStore } from '@/hooks/use-form-scale';
-import { cn } from '@/lib/utils';
-import { Item } from '@prisma/client';
-import { SupplierWithItems } from '@/app/api/suppliers/route';
 import {
    Select,
    SelectContent,
@@ -31,43 +22,45 @@ import {
    SelectValue
 } from '@/components/ui/select';
 
+import { purchasingInSchema } from '@/lib/schema-scales';
+import { useQuery } from '@tanstack/react-query';
+import { useState, startTransition } from "react";
+import { purchasingScaleIn } from '@/actions/scales/purchasing-scale-in';
+import { toast } from 'sonner';
+import { getSuppliers } from '@/data/api';
+import { useFormPurScaleEntryStore } from '@/hooks/use-form-scale';
+import { FormError } from '@/components/form-error';
+import { cn } from '@/lib/utils';
+import { Item } from '@prisma/client';
+import { SupplierWithItems } from '@/app/api/suppliers/route';
+
+
+
 export function FormEntry({ className }: { className?: string }) {
-   const [isPending, setIspending] = useState(false);
-   const [error, setError] = useState<string | undefined>(undefined);
+   const [isPending, setIspending] = useState(false)
+   const [error, setError] = useState<string | undefined>(undefined)
    const [products, setProducts] = useState<Item[]>([]);
    const { setOpen } = useFormPurScaleEntryStore();
+   const [weight, setWeight] = useState('');
 
-
-   const form = useForm<z.infer<typeof purchasingInSchema>>({
-      resolver: zodResolver(purchasingInSchema),
-      defaultValues: {
-         grossWeight: 0,
-         supplierId: '',
-         itemId: '',
-         driver: '',
-         licenseNo: '',
-         plateNo: '',
-         origin: ''
-      }
-   });
-
-   const { setValue } = form;
-
-   useEffect(() => {
+   React.useEffect(() => {
       const fetchWeight = async () => {
          try {
             const response = await fetch("http://localhost:5000/api/scale/scale-test");
             const jsonData = await response.json();
-            const fetchedWeight = jsonData.data.weight;
-            setValue("grossWeight", fetchedWeight);
+            setWeight(jsonData.data.weight);
          } catch (error) {
             console.error("Error fetching weight data:", error);
          }
       };
 
+      // Fetch data every second
       const interval = setInterval(fetchWeight, 1000);
+
+      // Clean up the interval on component unmount
       return () => clearInterval(interval);
-   }, [setValue]);
+   }, []);
+
 
    const handleSetProduct = (selectedProducts: Item[]) => setProducts(selectedProducts);
 
@@ -77,30 +70,46 @@ export function FormEntry({ className }: { className?: string }) {
       staleTime: 60000,
    });
 
+   const form = useForm<z.infer<typeof purchasingInSchema>>({
+      resolver: zodResolver(purchasingInSchema),
+      defaultValues: {
+         grossWeight: 0,
+         supplierId: '',
+         // quarterId: 'cm2wwmm5p0000w3falr8zqfzt',
+         itemId: '',
+         driver: '',
+         licenseNo: '',
+         plateNo: '',
+         origin: ''
+      }
+   });
+
+
+
    function onSubmit(values: z.infer<typeof purchasingInSchema>) {
-      setError(undefined);
-      setIspending(true);
+      setError(undefined)
+      setIspending(true)
       startTransition(() => {
          purchasingScaleIn(values)
             .then((res) => {
-               form.reset();
-               setIspending(false);
+               form.reset()
+               setIspending(false)
                if (res?.error) {
-                  setError(res.error);
-                  toast.error(res.error);
+                  setError(res.error)
+                  toast.error(res.error)
                }
                if (res?.success) {
-                  setOpen(false);
-                  toast.success(res.success);
+                  setOpen(false)
+                  toast.success(res.success)
                }
             })
-            .catch(() => toast.error("Something went wrong!"));
-      });
+            .catch(() => toast.error("Something went wrong!"))
+      })
    }
 
    return (
       <Form {...form}>
-         <form onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8 text-foreground/80", className)}>
+         <form onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-8 text-foreground/80", className)} >
             <FormField
                control={form.control}
                name="grossWeight"
@@ -113,6 +122,8 @@ export function FormEntry({ className }: { className?: string }) {
                            {...field}
                            disabled={isPending}
                            className="text-4xl py-10 text-center"
+                           className='text-4xl py-10 text-center'
+                           value={weight}
                         />
                      </FormControl>
                      <FormMessage />
