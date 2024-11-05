@@ -34,7 +34,7 @@ export async function purchasingScaleOut(values: z.infer<typeof purchasingOutSch
       // Fetch weighing log for validation
       const weighingLogDb = await db.weighingLog.findFirst({ where: { id, exitTime: null }, include: { item: true } });
       if (!weighingLogDb) return { error: "Driver not found" };
-      if (weighingLogDb.grossWeight <= tareWeight) {
+      if (weighingLogDb.grossWeight <= Number(tareWeight)) {
          return { error: "Tare weight cannot be greater than gross weight" };
       }
 
