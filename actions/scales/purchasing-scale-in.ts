@@ -74,7 +74,7 @@ export async function purchasingScaleIn(values: z.infer<typeof purchasingInSchem
                licenseNo,
                plateNo,
                origin,
-               grossWeight: parseInt(grossWeight),
+               grossWeight: grossWeight,
             },
          });
       });

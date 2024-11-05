@@ -22,7 +22,7 @@ export const purchasingInSchema = z.object({
    origin: z.string().min(1, {
       message: 'Origin is required'
    }),
-   grossWeight: z.string().min(1, {
+   grossWeight: z.number().min(1, {
       message: 'Gross weight is required'
    }),
 });
@@ -40,5 +40,5 @@ export const purchasingOutSchema = z.object({
       }, {
          message: "Quality factor must between 1 and 100.",
       }),
-   tareWeight: z.string().min(1, { message: 'Tare weight is required.' })
+   tareWeight: z.number().min(1, { message: 'Tare weight is required.' })
 });

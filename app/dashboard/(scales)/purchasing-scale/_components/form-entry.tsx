@@ -24,7 +24,7 @@ import {
 
 import { purchasingInSchema } from '@/lib/schema-scales';
 import { useQuery } from '@tanstack/react-query';
-import { useState, startTransition } from "react";
+import { useState, startTransition, useEffect } from "react";
 import { purchasingScaleIn } from '@/actions/scales/purchasing-scale-in';
 import { toast } from 'sonner';
 import { getSuppliers } from '@/data/api';
@@ -41,34 +41,6 @@ export function FormEntry({ className }: { className?: string }) {
    const [error, setError] = useState<string | undefined>(undefined)
    const [products, setProducts] = useState<Item[]>([]);
    const { setOpen } = useFormPurScaleEntryStore();
-   const [weight, setWeight] = useState('');
-
-   React.useEffect(() => {
-      const fetchWeight = async () => {
-         try {
-            const response = await fetch("http://localhost:5000/api/scale/scale-test");
-            const jsonData = await response.json();
-            setWeight(jsonData.data.weight);
-         } catch (error) {
-            console.error("Error fetching weight data:", error);
-         }
-      };
-
-      // Fetch data every second
-      const interval = setInterval(fetchWeight, 1000);
-
-      // Clean up the interval on component unmount
-      return () => clearInterval(interval);
-   }, []);
-
-
-   const handleSetProduct = (selectedProducts: Item[]) => setProducts(selectedProducts);
-
-   const { data: suppliers, isLoading: is_supplier_pending, error: supplier_error } = useQuery<SupplierWithItems[]>({
-      queryKey: ["suppliers", "SP"],
-      queryFn: () => getSuppliers("SP"),
-      staleTime: 60000,
-   });
 
    const form = useForm<z.infer<typeof purchasingInSchema>>({
       resolver: zodResolver(purchasingInSchema),
@@ -84,6 +56,32 @@ export function FormEntry({ className }: { className?: string }) {
       }
    });
 
+   const { setValue } = form;
+
+   useEffect(() => {
+      const fetchWeight = async () => {
+         try {
+            const response = await fetch("http://localhost:5000/api/scale/scale-test");
+            const jsonData = await response.json();
+            const fetchedWeight = jsonData.data.weight;
+            setValue("grossWeight", fetchedWeight);
+         } catch (error) {
+            console.error("Error fetching weight data:", error);
+         }
+      };
+      const interval = setInterval(fetchWeight, 1000);
+
+      return () => clearInterval(interval);
+   }, [setValue]);
+
+
+   const handleSetProduct = (selectedProducts: Item[]) => setProducts(selectedProducts);
+
+   const { data: suppliers, isLoading: is_supplier_pending, error: supplier_error } = useQuery<SupplierWithItems[]>({
+      queryKey: ["suppliers", "SP"],
+      queryFn: () => getSuppliers("SP"),
+      staleTime: 60000,
+   });
 
 
    function onSubmit(values: z.infer<typeof purchasingInSchema>) {
@@ -122,8 +120,6 @@ export function FormEntry({ className }: { className?: string }) {
                            {...field}
                            disabled={isPending}
                            className="text-4xl py-10 text-center"
-                           className='text-4xl py-10 text-center'
-                           value={weight}
                         />
                      </FormControl>
                      <FormMessage />
