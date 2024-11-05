@@ -99,24 +99,24 @@ export function FormExit({ id, onClose, className }: FormExitProps) {
                            {...field}
                            disabled={isPending}
                            className='text-4xl py-10 text-center'
-                           placeholder='######'
-                           onChange={(e) => {
-                              const value = e.target.value;
-                              if (!value || value.length <= 7) {
-                                 field.onChange(value ? String(value) : '');
-                              }
-                           }}
-                           onKeyDown={(e) => {
-                              if (e.key.match(/[^0-9]/) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
-                                 e.preventDefault();
-                              }
-                           }}
-                           onPaste={(e) => {
-                              const paste = e.clipboardData.getData('text');
-                              if (paste.match(/[^0-9]/)) {
-                                 e.preventDefault();
-                              }
-                           }}
+                        // placeholder='######'
+                        // onChange={(e) => {
+                        //    const value = e.target.value;
+                        //    if (!value || value.length <= 7) {
+                        //       field.onChange(value ? String(value) : '');
+                        //    }
+                        // }}
+                        // onKeyDown={(e) => {
+                        //    if (e.key.match(/[^0-9]/) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                        //       e.preventDefault();
+                        //    }
+                        // }}
+                        // onPaste={(e) => {
+                        //    const paste = e.clipboardData.getData('text');
+                        //    if (paste.match(/[^0-9]/)) {
+                        //       e.preventDefault();
+                        //    }
+                        // }}
                         />
                      </FormControl>
                      <FormMessage />
