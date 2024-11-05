@@ -28,18 +28,18 @@ export async function purchasingScaleOut(values: z.infer<typeof purchasingOutSch
       if (!validationResult.success) return { error: "Invalid fields", issues: validationResult.error.errors };
 
       const { id, tareWeight, qualityFactor } = validationResult.data;
-      // const intTareWeight = tareWeight
+      const intTareWeight = Number(tareWeight);
       const floatQualityFactor = qualityFactor != null ? parseFloat(qualityFactor) : 0;
 
       // Fetch weighing log for validation
       const weighingLogDb = await db.weighingLog.findFirst({ where: { id, exitTime: null }, include: { item: true } });
       if (!weighingLogDb) return { error: "Driver not found" };
-      if (weighingLogDb.grossWeight <= Number(tareWeight)) {
+      if (weighingLogDb.grossWeight <= intTareWeight) {
          return { error: "Tare weight cannot be greater than gross weight" };
       }
 
       // Calculate weights
-      const netWeight = weighingLogDb.grossWeight - tareWeight;
+      const netWeight = weighingLogDb.grossWeight - intTareWeight;
       const finalWeight = netWeight * (1 - floatQualityFactor / 100);
 
       // Perform database updates within a transaction for atomicity
@@ -50,7 +50,7 @@ export async function purchasingScaleOut(values: z.infer<typeof purchasingOutSch
             data: {
                locationId: userDb.location?.id,
                operatorId: userDb.id,
-               tareWeight: tareWeight,
+               tareWeight: intTareWeight,
                quality: floatQualityFactor,
                exitTime: new Date(),
                netWeight,
