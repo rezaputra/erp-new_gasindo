@@ -24,6 +24,7 @@ export default async function PurchasingListingPage() {
   const pageLimit = productSearchParamsCache.get('limit');
   const productsArray = product ? product.split('.') : [];
 
+
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 

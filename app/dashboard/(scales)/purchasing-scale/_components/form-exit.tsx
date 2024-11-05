@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 
 import { purchasingOutSchema } from '@/lib/schema-scales';
 import { cn } from '@/lib/utils';
-import { useState, startTransition } from "react";
+import { useState, startTransition, useEffect } from "react";
 import { purchasingScaleOut } from '@/actions/scales/purchasing-scale-out';
 import { toast } from 'sonner';
 import { FormError } from '@/components/form-error';
@@ -38,10 +38,29 @@ export function FormExit({ id, onClose, className }: FormExitProps) {
       resolver: zodResolver(purchasingOutSchema),
       defaultValues: {
          id: id,
-         qualityFactor: '',
-         tareWeight: ''
+         tareWeight: 0,
+         qualityFactor: ''
       }
    });
+
+   const { setValue } = form;
+
+
+   useEffect(() => {
+      const fetchWeight = async () => {
+         try {
+            const response = await fetch("http://localhost:5000/api/scale/scale-test");
+            const jsonData = await response.json();
+            const fetchedWeight = jsonData.data.weight;
+            setValue("tareWeight", fetchedWeight);
+         } catch (error) {
+            console.error("Error fetching weight data:", error);
+         }
+      };
+
+      const interval = setInterval(fetchWeight, 1000);
+      return () => clearInterval(interval);
+   }, [setValue]);
 
 
    function onSubmit(values: z.infer<typeof purchasingOutSchema>) {
