@@ -48,7 +48,7 @@ export function FormExit({ id, onClose, className }: FormExitProps) {
    useEffect(() => {
       const fetchWeight = async () => {
          try {
-            const response = await fetch("http://localhost:5000/api/scale/scale-test");
+            const response = await fetch("http://localhost:5000/api/scale");
             const jsonData = await response.json();
             const fetchedWeight = jsonData.data.weight;
             setValue("tareWeight", fetchedWeight);
